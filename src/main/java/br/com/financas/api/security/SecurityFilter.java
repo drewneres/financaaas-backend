@@ -1,6 +1,7 @@
 package br.com.financas.api.security;
 
 import br.com.financas.api.repository.UsuarioRepository; // Importe o repositório
+import br.com.financas.api.service.TokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

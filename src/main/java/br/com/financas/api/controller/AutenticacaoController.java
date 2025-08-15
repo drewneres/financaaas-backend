@@ -2,7 +2,7 @@ package br.com.financas.api.controller;
 
 import br.com.financas.api.security.DadosAutenticacao;
 import br.com.financas.api.security.DadosTokenJWT;
-import br.com.financas.api.security.TokenService;
+import br.com.financas.api.service.TokenService;
 import br.com.financas.api.model.Usuario;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

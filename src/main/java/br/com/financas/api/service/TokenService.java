@@ -1,4 +1,4 @@
-package br.com.financas.api.security;
+package br.com.financas.api.service;
 
 import br.com.financas.api.model.Usuario; // Verifique se o import para Usuario está correto
 import io.jsonwebtoken.Jwts;
@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 @Service
 public class TokenService {
