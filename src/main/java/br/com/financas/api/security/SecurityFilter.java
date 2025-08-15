@@ -1,7 +1,6 @@
 package br.com.financas.api.security;
 
-import br.com.financas.api.repository.UsuarioRepository; // Importe o repositório
-import br.com.financas.api.service.TokenService;
+import br.com.financas.api.repository.UsuarioRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +10,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import br.com.financas.api.service.TokenService;
+
 
 import java.io.IOException;
 
@@ -20,7 +21,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     @Autowired
     private TokenService tokenService;
 
-    @Autowired // Injete o repositório
+    @Autowired
     private UsuarioRepository usuarioRepository;
 
     @Override
@@ -28,22 +29,28 @@ public class SecurityFilter extends OncePerRequestFilter {
         var tokenJWT = recuperarToken(request);
 
         if (tokenJWT != null) {
+            // Valida o token e pega o login (subject)
             var subject = tokenService.getSubject(tokenJWT);
-            var usuario = usuarioRepository.findByLogin(subject); // Busque o usuário no banco
+            // Busca o usuário no banco de dados
+            var usuario = usuarioRepository.findByLogin(subject);
 
             if (usuario != null) {
+                // Se o usuário existe, nós o autenticamos
                 var authentication = new UsernamePasswordAuthenticationToken(usuario, null, usuario.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication); // Defina que o usuário está autenticado
+
+                // Esta linha é a mais importante: ela informa ao Spring que o usuário está autenticado
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 
+        // Continua o fluxo da requisição, que agora está autenticada (ou não, se não havia token)
         filterChain.doFilter(request, response);
     }
 
     private String recuperarToken(HttpServletRequest request) {
         var authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null) {
-            return authorizationHeader.replace("Bearer ", "");
+            return authorizationHeader.replace("Bearer ", "").trim();
         }
         return null;
     }
