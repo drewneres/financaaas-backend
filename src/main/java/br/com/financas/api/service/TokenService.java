@@ -1,11 +1,13 @@
-package br.com.financas.api.service;
+package br.com.financas.api.service; // Ou br.com.financas.api.security, dependendo de onde está a sua classe
 
-import br.com.financas.api.model.Usuario; // Verifique se o import para Usuario está correto
+import br.com.financas.api.model.Usuario;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
@@ -15,28 +17,29 @@ public class TokenService {
     private String secret;
 
     public String gerarToken(Usuario usuario) {
-        return Jwts.builder()
-                .setIssuer("API Financas.com") // Identificador de quem emitiu o token
-                .setSubject(usuario.getLogin()) // Identifica o usuário do token
-                .setIssuedAt(new Date()) // Data de emissão
-                .setExpiration(dataExpiracao()) // Define o prazo de validade
-                .signWith(SignatureAlgorithm.HS256, secret) // Assina o token com o algoritmo e a chave secreta
-                .compact(); // Constrói a string do token
-    }
+        // 1. Converte a string secreta em uma chave criptográfica segura
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
 
-    // O método para validar o token (vamos usar depois)
-    public String getSubject(String tokenJWT) {
-        return Jwts.parser()
-                .setSigningKey(secret)
-                .build()
-                .parseClaimsJws(tokenJWT)
-                .getBody()
-                .getSubject();
-    }
-
-    private Date dataExpiracao() {
-        // Token válido por 2 horas a partir de agora
         long duracaoEmMillis = 2 * 60 * 60 * 1000; // 2 horas
-        return new Date(System.currentTimeMillis() + duracaoEmMillis);
+        Date dataExpiracao = new Date(System.currentTimeMillis() + duracaoEmMillis);
+
+        return Jwts.builder()
+                .setIssuer("API Financas.com")
+                .setSubject(usuario.getLogin())
+                .setIssuedAt(new Date())
+                .setExpiration(dataExpiracao)
+                .signWith(key) // 2. Usa o objeto de chave em vez da string
+                .compact();
+    }
+
+    public String getSubject(String tokenJWT) {
+        SecretKey key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+
+        return Jwts.parser()
+                .verifyWith(key) // Usa a mesma chave para verificar
+                .build()
+                .parseSignedClaims(tokenJWT)
+                .getPayload()
+                .getSubject();
     }
 }
